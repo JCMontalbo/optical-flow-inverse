@@ -8,3 +8,5 @@ dist/
 figures/video/flows_cache.npz
 experiments/downstream/cache/
 experiments/downstream/generated/
+experiments/heart/cache/
+experiments/heart/flows/
