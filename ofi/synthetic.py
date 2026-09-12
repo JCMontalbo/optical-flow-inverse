@@ -97,3 +97,60 @@ def make_pair(texture: np.ndarray, finv, noise_std: float = 0.0, seed: int = 1):
         i0 = i0 + rng.normal(0, noise_std, i0.shape)
         i1 = i1 + rng.normal(0, noise_std, i1.shape)
     return i0, i1
+
+
+def make_disc(shape: tuple[int, int], center=None, radius: float = 20.0, ring: float = 3.0) -> np.ndarray:
+    """Piecewise-constant disc with a grey ring, as in the dissertation's phantoms.
+
+    Piecewise-constant images have zero gradient almost everywhere, so the
+    flow cannot be recovered or applied without adding texture (§3.3); this
+    phantom exists to demonstrate that.
+    """
+    xs, ys = _grid(shape)
+    cx, cy = center if center is not None else ((shape[1] - 1) / 2, (shape[0] - 1) / 2)
+    r = np.hypot(xs - cx, ys - cy)
+    img = np.zeros(shape)
+    img[r <= radius + ring] = 0.5
+    img[r <= radius] = 1.0
+    return img
+
+
+def make_phantom(shape: tuple[int, int], n_blobs: int = 7, texture: float = 0.08, seed: int = 0) -> np.ndarray:
+    """Soft-edged discs and Gaussian blobs of varied size and brightness on a textured background.
+
+    Has visible structure (so motion is easy to see) and gradients everywhere
+    (so the flow is recoverable) -- the synthetic stand-in for an MRI slice.
+    Discs have a ~2 px edge so the image stays differentiable.
+    """
+    rng = np.random.default_rng(seed)
+    xs, ys = _grid(shape)
+    img = texture * make_texture(shape, sigma=2.0, seed=seed + 1)
+    for k in range(n_blobs):
+        cx = rng.uniform(0.2, 0.8) * shape[1]
+        cy = rng.uniform(0.2, 0.8) * shape[0]
+        r = rng.uniform(0.04, 0.11) * shape[1]
+        amp = rng.uniform(0.35, 1.0)
+        if k % 2 == 0:  # soft-edged disc, brighter interior texture
+            d = np.hypot(xs - cx, ys - cy)
+            img += amp * 0.5 * (1 - np.tanh((d - r) / 1.5))
+        else:  # elliptical Gaussian blob
+            sy = r * rng.uniform(0.6, 1.6)
+            img += amp * np.exp(-0.5 * (((xs - cx) / r) ** 2 + ((ys - cy) / sy) ** 2))
+    img -= img.min()
+    img /= img.max()
+    return img
+
+
+def rigid_flow(shape: tuple[int, int], angle_deg: float, dx: float, dy: float, center=None):
+    """Rotation about ``center`` followed by translation: ``p -> c + R(p - c) + d``."""
+    (u, v), _ = rotation_flow(shape, angle_deg, center)
+    u, v = u + dx, v + dy
+    cx, cy = center if center is not None else ((shape[1] - 1) / 2, (shape[0] - 1) / 2)
+    th = np.deg2rad(angle_deg)
+    c, s = np.cos(th), np.sin(th)
+
+    def finv(xq, yq):
+        dxq, dyq = xq - dx - cx, yq - dy - cy
+        return cx + c * dxq + s * dyq, cy - s * dxq + c * dyq
+
+    return (u, v), finv
