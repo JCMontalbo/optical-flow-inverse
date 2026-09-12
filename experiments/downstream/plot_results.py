@@ -26,9 +26,10 @@ LABELS = {"none": "A  no augmentation", "standard": "B  standard (flip/rotate/sc
 
 def load():
     cells = defaultdict(list)
-    with RESULTS.open() as f:
-        for r in csv.DictReader(f):
-            cells[(int(r["budget"]), r["arm"])].append(float(r["jmean"]))
+    for path in sorted(RESULTS.parent.glob("results*.csv")):
+        with path.open() as f:
+            for r in csv.DictReader(f):
+                cells[(int(r["budget"]), r["arm"])].append(float(r["jmean"]))
     return cells
 
 
@@ -75,7 +76,7 @@ def main():
         t1, t2 = table.get((b, a1)), table.get((b, a2))
         if not t1 or not t2:
             return None
-        return (t1[0] - t2[0]) * 100, t1[3] > t2[4]  # points, seed ranges disjoint
+        return (t1[0] - t2[0]) * 100, (t1[3] > t2[4]) or (t2[3] > t1[4])  # points, seed ranges disjoint (either direction)
 
     print("\nPre-registered criteria (docs/downstream_plan.md):")
     for b in [x for x in (1, 2) if x in budgets]:

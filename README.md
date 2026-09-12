@@ -234,6 +234,43 @@ python scripts/propagate_labels.py sintel.mp4 --start 0 --end 58 --out out/
 
 *Clip: [Sintel](https://durian.blender.org) © Blender Foundation, CC BY 3.0.*
 
+## Does it help training? A pre-registered test on DAVIS — and why it was the wrong arena
+
+The dissertation's motivating claim is that flow-generated (image, label) pairs are better training data
+than blind rotate/skew/shear augmentation when labels are scarce. It never had time to test this. I
+pre-registered a test ([docs/downstream_plan.md](docs/downstream_plan.md), committed before any run) on
+DAVIS 2016: a small U-Net trained with 1, 2 or 20 labelled frames per video, three seeds, scored by
+J-mean on the 20 standard val videos. Code in [`experiments/downstream/`](experiments/downstream/).
+
+![downstream](figures/downstream.png)
+
+| labels / video | standard augmentation | flow-generated pairs | labels carried to real neighbours |
+|---|---|---|---|
+| 1 | **0.385 ± 0.011** | 0.337 ± 0.013 | 0.323 ± 0.006 |
+| 2 | **0.420 ± 0.008** | 0.383 ± 0.016 | 0.377 ± 0.010 |
+| 20 | **0.438 ± 0.027** | 0.418 ± 0.007 | — |
+
+**Verdict against the pre-registered criteria: H1 not supported.** Standard augmentation wins by 4–5 points
+at 1–2 labels/video with disjoint seed ranges; the gap narrows to 2 points (overlapping ranges) at 20. The
+flow pairs beat plain label propagation by 1.4 points at 1 label/video and 0.5 at 2 (H2 marginal).
+36 % of the estimated flows failed the 25 dB reconstruction gate and were dropped.
+
+Two things this does and does not show:
+
+- **DAVIS cannot test the claim the dissertation actually makes.** A flipped bear is still a bear: on
+  natural video, blind geometric transforms produce *valid* images, so the baseline is never penalised for
+  being blind. The thesis's argument is about domains — anatomy — where flips and large rotations produce
+  impossible images and augmentation has to come from observed motion. That test is
+  [next](docs/downstream_heart_plan.md), on cardiac MRI, against baselines restricted to plausible
+  transforms and against random elastic deformation.
+- **The method was run as a fixed set of 8 pairs per frame**, generated once, while the standard arm drew a
+  fresh transform every step. The recovered flow defines a continuous family of perturbations; sampling it
+  on the fly is the fair implementation and is what the MRI experiment uses.
+
+What it does show: on natural video, a fixed set of pairs from a 1981 flow method does not beat standard
+augmentation, and most of what it gives you is already given by carrying labels to neighbouring real
+frames. A null result the dissertation could not obtain is still a result.
+
 ## Results — the inverse problem itself
 
 `python scripts/run_experiments.py` (≈35 s), 128×128 smooth random texture. Endpoint error (EPE) is the mean
