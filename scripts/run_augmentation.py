@@ -67,7 +67,7 @@ def fig_homotopy():
     lin = [linearized_reconstruction(I0, I1, *scale_flow(U, V, e)) for e in eps]
     tra = [propagate_semi_lagrangian(I0, *scale_flow(U, V, e), 1.0) for e in eps]
 
-    fig, ax = plt.subplots(3, 5, figsize=(13, 8))
+    fig, ax = plt.subplots(3, 5, figsize=(13, 8.4), constrained_layout=True)
     for j, e in enumerate(eps):
         ax[0, j].imshow(truth[j], cmap="gray", vmin=0, vmax=1)
         _clean(ax[0, j], f"truth, eps = {e}")
@@ -79,7 +79,6 @@ def fig_homotopy():
     ax[1, 0].set_ylabel("E1 - (Ex*eps*u + Ey*eps*v)", fontsize=10)
     ax[2, 0].set_ylabel("propagate along (eps*u, eps*v)", fontsize=10)
     fig.suptitle("Global homotopy (u, v) -> (eps*u, eps*v), estimated flow. Linearised = blend; transport = motion.", fontsize=11)
-    fig.tight_layout()
     fig.savefig(OUT / "homotopy.png", dpi=110)
     plt.close(fig)
 
@@ -97,14 +96,14 @@ def fig_homotopy():
         return (im,)
 
     anim = FuncAnimation(fig, update, frames=len(frames), interval=80, blit=True)
-    anim.save(OUT / "homotopy.gif", writer=PillowWriter(fps=12))
+    anim.save(OUT / "homotopy.gif", writer=PillowWriter(fps=12), dpi=80)
     plt.close(fig)
     return {e: (psnr(lin[j], truth[j]), psnr(tra[j], truth[j])) for j, e in enumerate(eps)}
 
 
 def fig_localized_family():
     members = localized_family(U, V, n=5, width=16.0, rng=11, gain=1.5)
-    fig, ax = plt.subplots(2, 6, figsize=(15, 5.8))
+    fig, ax = plt.subplots(2, 6, figsize=(15, 6.2), constrained_layout=True)
     ax[0, 0].imshow(I0, cmap="gray", vmin=0, vmax=1)
     _clean(ax[0, 0], "frame 0")
     ax[1, 0].imshow(np.abs(I1 - I0), cmap="magma", vmin=0, vmax=0.4)
@@ -118,7 +117,6 @@ def fig_localized_family():
         ax[1, k].add_patch(Circle((h, kk), 2 * 16.0, fill=False, ec="w", lw=0.8, ls="--"))
         _clean(ax[1, k], f"|member {k} - frame 0|")
     fig.suptitle("Localised family (3.2): the recovered flow gated by a Gaussian window at a random centre (2-sigma circle). Only that region moves.", fontsize=10)
-    fig.tight_layout()
     fig.savefig(OUT / "localized_family.png", dpi=110)
     plt.close(fig)
 
@@ -130,7 +128,7 @@ def fig_area_preserving():
     mask = make_disc(SHAPE, center=center, radius=16, ring=0)
     ys, xs = np.mgrid[0 : SHAPE[0], 0 : SHAPE[1]]
     step = 6
-    fig, ax = plt.subplots(2, 4, figsize=(13, 6.8))
+    fig, ax = plt.subplots(2, 4, figsize=(13, 7.2), constrained_layout=True)
     rows = []
     for j, (name, A) in enumerate(gens):
         u, v = area_preserving_perturbation(SHAPE, A, center, width, amplitude=amp)
@@ -156,8 +154,28 @@ def fig_area_preserving():
         naive = propagate_ode(mask, nu, nv, 1.0, steps=16, method="midpoint").sum() / mask.sum()
         rows.append((name, ratio, naive))
     fig.suptitle("Area-preserving perturbations (4.5): traceless generators, localised through a stream function. Red = original disc, orange = moved.", fontsize=10)
-    fig.tight_layout()
     fig.savefig(OUT / "area_preserving.png", dpi=110)
+    plt.close(fig)
+
+    # GIF: frame 0 deforming under each perturbation, t sweeping 0 -> 1 -> 0.
+    ts = list(np.linspace(0, 1, 14))
+    ts = ts + ts[-2:0:-1]
+    fields = [area_preserving_perturbation(SHAPE, A, center, width, amplitude=amp) for _, A in gens]
+    fig, ax = plt.subplots(1, 4, figsize=(11, 3.1))
+    ims = []
+    for a, (name, _), (u, v) in zip(ax, gens, fields):
+        ims.append(a.imshow(I0, cmap="gray", vmin=0, vmax=1))
+        a.contour(mask, levels=[0.5], colors="tab:red", linewidths=0.8, linestyles="--")
+        _clean(a, name)
+    fig.tight_layout(pad=0.3)
+
+    def update(k):
+        for im, (u, v) in zip(ims, fields):
+            im.set_data(propagate_ode(I0, u, v, ts[k], steps=8, method="midpoint"))
+        return ims
+
+    anim = FuncAnimation(fig, update, frames=len(ts), interval=80, blit=True)
+    anim.save(OUT / "deformation.gif", writer=PillowWriter(fps=12), dpi=64)
     plt.close(fig)
     return rows
 
@@ -177,7 +195,7 @@ def fig_hybrid():
     one_scale = propagate_semi_lagrangian(i0, u1, v1, 1.0)
     one_scale_err = float(np.linalg.norm(one_scale - i1) / np.linalg.norm(i1))
 
-    fig = plt.figure(figsize=(13, 6))
+    fig = plt.figure(figsize=(13, 6.4), constrained_layout=True)
     gs = fig.add_gridspec(2, 6, height_ratios=[1, 1.1])
     picks = [0, 1, 2, 4, 8, 12]
     for j, k in enumerate(picks):
@@ -194,7 +212,6 @@ def fig_hybrid():
     a.set_title(f"Forward hybrid propagation ({HYBRID_ANGLE:.0f} deg rotation): relative error to the target frame")
     a.grid(alpha=0.3)
     a.legend(fontsize=9)
-    fig.tight_layout()
     fig.savefig(OUT / "hybrid.png", dpi=110)
     plt.close(fig)
     return res.rel_error, res_pyr.rel_error, single_err, one_scale_err
