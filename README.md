@@ -199,6 +199,39 @@ furthest) while their sharpness stays within a few percent of the real footage.
 python scripts/synthesize_video.py sintel.mp4 --start 0 --end 58 --out out/     --url https://test-videos.co.uk/vids/sintel/mp4/h264/360/Sintel_360_10s_1MB.mp4
 ```
 
+### Labels ride along
+
+A segmentation label is an image on the same grid, so it transports along a flow exactly as intensities do
+([`ofi/labels.py`](ofi/labels.py): one-hot channels, linear interpolation, hardened by argmax). That is what
+makes generated data *trainable*: every synthetic frame comes with its label, and a label drawn on one video
+frame can be carried to its neighbours. The clip has no ground-truth masks, so the score is against a
+per-frame pseudo-label (the character's silhouette, tracked from frame to frame).
+
+<p align="center">
+<img src="figures/video/labels.gif" width="540" alt="labels propagated through the video and carried onto synthetic clips">
+</p>
+
+![label propagation](figures/video/labels.png)
+
+| experiment | propagated | baseline |
+|---|---|---|
+| 1. label frame *k*, carry to *k+1* (57 pairs) | **0.961** IoU | 0.927 (label left in place) |
+| 2. label every 5th frame, carry to the frames between | **0.940** | 0.876 (hold the last label) |
+| 2. label every 10th frame | **0.897** | 0.828 |
+| 2. label every 20th frame | **0.852** | 0.741 |
+| 2. label frame 0 only, carry through all 57 | 0.646 | 0.638 |
+| 3. synthetic clips: label carried along the same deviation as the image, vs. the synthetic frame's own silhouette (5 variants) | **0.987–0.990** | 0.946–0.963 (unmoved label) |
+
+The honest row is the fifth: a single label chained across a whole shot in which the character turns and
+new parts of her come into view is no better than holding it still — a flow can move a label, it cannot
+invent one. Label every 10–20 frames and propagate in between, and it is 7–11 IoU points better than the
+alternative. Row 3 is the one that matters for augmentation: the carried label matches the deformed
+silhouette at 0.99.
+
+```bash
+python scripts/propagate_labels.py sintel.mp4 --start 0 --end 58 --out out/
+```
+
 *Clip: [Sintel](https://durian.blender.org) © Blender Foundation, CC BY 3.0.*
 
 ## Results — the inverse problem itself
@@ -256,7 +289,7 @@ experiments. `--width`, `--gain`, `--amplitude` control the window size, how muc
 moves, and the perturbation strength.
 
 ```bash
-pytest                               # 30 tests, ~4 s
+pytest                               # 34 tests, ~4 s
 python scripts/run_augmentation.py   # figures for ch. 3–4
 python scripts/run_experiments.py    # figures for the inverse problem
 ```
@@ -286,14 +319,18 @@ ofi/
   augment.py        ch. 3-4: homotopy, localisation, advection norms, pixel-movement ODE,
                     hybrid loop, area-preserving generators and their windowed extension
   metrics.py        endpoint error, angular error, PSNR
+  labels.py         transporting segmentation labels along a flow
+  video.py          video I/O, subject tracker, synthetic-clip family
 scripts/
   run_augmentation.py   figures and numbers for ch. 3-4
   run_experiments.py    figures and numbers for the inverse problem
   augment_pair.py       the pipeline on two frames of your own
   augment_video.py      the pipeline streaming over a video
   synthesize_video.py   new frames (validated on held-out frames, slow motion) and new clips
-ofi/video.py            video I/O and the camera-relative window tracker
-tests/                  30 tests on synthetic ground truth, one per claim above
+  propagate_labels.py   labels carried through video and onto synthetic clips
+ofi/labels.py           label transport (one-hot, soft between steps), IoU, Dice
+ofi/video.py            video I/O, camera-relative window tracker, synthetic-clip synthesis
+tests/                  34 tests on synthetic ground truth, one per claim above
 ```
 
 ## Background

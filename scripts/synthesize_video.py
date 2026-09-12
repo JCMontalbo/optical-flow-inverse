@@ -40,8 +40,9 @@ from matplotlib.patches import Circle
 
 from ofi import horn_schunck_pyramid, propagate_semi_lagrangian, psnr
 from ofi.augment import ROTATION, SHEAR, SQUEEZE, area_preserving_perturbation
-from ofi.synthetic import warp
-from ofi.video import WindowTracker, crop_letterbox, read_frames, resize_frames
+from ofi.video import cached_flows, crop_letterbox, read_frames, resize_frames
+from ofi.video import default_variants
+from ofi.video import synthesize_family as _synthesize_family
 
 
 def _clean(ax, title=None):
@@ -54,16 +55,6 @@ def _clean(ax, title=None):
 def sharpness(img: np.ndarray) -> float:
     gy, gx = np.gradient(img)
     return float(np.sqrt(gx**2 + gy**2).mean())
-
-
-def estimate_flows(frames, pairs, levels, alpha, label):
-    t0 = time.time()
-    out = {}
-    for i, (a, b) in enumerate(pairs):
-        out[(a, b)] = horn_schunck_pyramid(frames[a], frames[b], alpha=alpha, levels=levels)
-        if i % 10 == 0:
-            print(f"  {label}: {i + 1}/{len(pairs)} flows ({time.time() - t0:.0f}s)")
-    return out
 
 
 # --------------------------------------------------------------------------- A
@@ -158,46 +149,9 @@ def slow_motion(frames, flows1, out, factor, seg, credit):
 # --------------------------------------------------------------------------- B
 
 
-def make_variants(rng, gain, amp, H):
-    """Per-variant recipe: what is done to the motion under the tracked window."""
-    return [
-        dict(name=f"region moves {gain:g}x", kind="amplify", gain=gain),
-        dict(name="region frozen", kind="amplify", gain=0.0),
-        dict(name=f"pulsing swirl", kind="perturb", A=ROTATION, amp=amp, period=16),
-        dict(name=f"pulsing squeeze", kind="perturb", A=SQUEEZE, amp=amp, period=20),
-        dict(name=f"pulsing shear", kind="perturb", A=SHEAR, amp=amp, period=24),
-    ]
-
-
 def synthesize_family(frames, flows1, variants, window, rho, cap, out, gif_stride, credit):
     n, H, W = frames.shape
-    ys, xs = np.mgrid[0:H, 0:W].astype(float)
-    tracker = WindowTracker((H, W), window)
-    devs = [(np.zeros((H, W)), np.zeros((H, W))) for _ in variants]
-    syn = [[] for _ in variants]
-    centers = []
-    for k in range(n - 1):
-        u, v = flows1[(k, k + 1)]
-        f, center = tracker.window(u, v)
-        centers.append(center)
-        for i, spec in enumerate(variants):
-            du, dv = devs[i]
-            # the synthetic frame: the real frame, resampled once along the accumulated deviation
-            syn[i].append(propagate_semi_lagrangian(frames[k], du, dv, 1.0))
-            # per-frame deviation from the real motion under the window
-            if spec["kind"] == "amplify":
-                eu, ev = (spec["gain"] - 1) * f * u, (spec["gain"] - 1) * f * v
-            else:
-                a = spec["amp"] * np.sin(2 * np.pi * k / spec["period"])
-                eu, ev = area_preserving_perturbation((H, W), spec["A"], tuple(center), window, amplitude=abs(a))
-                eu, ev = np.sign(a) * eu, np.sign(a) * ev
-            # advect the accumulated deviation with the real motion so it stays on the content,
-            # decay it with memory rho, add this frame's contribution, and cap its magnitude
-            du = rho * warp(du, xs - u, ys - v, order=1) + eu
-            dv = rho * warp(dv, xs - u, ys - v, order=1) + ev
-            m = np.hypot(du, dv)
-            s = np.minimum(1.0, cap / np.maximum(m, 1e-9))
-            devs[i] = (du * s, dv * s)
+    syn, _, centers = _synthesize_family(frames, flows1, variants, window, rho, cap)
 
     # stats: distance from the original, and sharpness relative to the original
     dist = np.array([[psnr(syn[i][k], frames[k]) for k in range(n - 1)] for i in range(len(variants))])
@@ -278,6 +232,7 @@ def main():
     ap.add_argument("--cap", type=float, default=None, help="max accumulated deviation in px (default 10%% of height)")
     ap.add_argument("--gif-stride", type=int, default=2)
     ap.add_argument("--seed", type=int, default=0)
+    # flows are cached in <out>/flows_cache.npz so re-runs skip the estimation
     ap.add_argument("--credit", default="")
     args = ap.parse_args()
 
@@ -295,8 +250,9 @@ def main():
     cap = args.cap or 0.10 * H
     print(f"{n} frames of {H}x{W}")
 
-    flows1 = estimate_flows(frames, [(k, k + 1) for k in range(n - 1)], args.levels, args.alpha, "consecutive")
-    flows2 = estimate_flows(frames, [(k, k + 2) for k in range(0, n - 2, 2)], args.levels, args.alpha, "skip-one")
+    cache = out / "flows_cache.npz"
+    flows1 = cached_flows(frames, [(k, k + 1) for k in range(n - 1)], cache, args.levels, args.alpha)
+    flows2 = cached_flows(frames, [(k, k + 2) for k in range(0, n - 2, 2)], cache, args.levels, args.alpha)
 
     rows = held_out_validation(frames, flows2, out, args.credit)
     print(f"\nA. held-out frames ({len(rows)}): PSNR nearest {rows[:, 1].mean():.1f}  blend {rows[:, 2].mean():.1f}  propagated {rows[:, 3].mean():.1f} dB")
@@ -304,8 +260,7 @@ def main():
     slow_motion(frames, flows1, out, args.factor, (best, best + args.slowmo_pairs), args.credit)
     print(f"   slowmo.gif: pairs {best}-{best + args.slowmo_pairs}, {args.factor}x")
 
-    rng = np.random.default_rng(args.seed)
-    variants = make_variants(rng, args.gain, amp, H)
+    variants = default_variants(args.gain, amp)
     dist, sharp = synthesize_family(frames, flows1, variants, window, args.rho, cap, out, args.gif_stride, args.credit)
     print("\nB. synthetic family (per variant: PSNR to original at last frame, mean sharpness ratio)")
     for spec, d, sh in zip(variants, dist, sharp):

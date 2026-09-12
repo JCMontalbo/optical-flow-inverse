@@ -25,7 +25,7 @@ from .synthetic import warp
 
 
 def propagate_semi_lagrangian(
-    i0: np.ndarray, u: np.ndarray, v: np.ndarray, t: float, fixed_point_iters: int = 3
+    i0: np.ndarray, u: np.ndarray, v: np.ndarray, t: float, fixed_point_iters: int = 3, order: int = 3
 ) -> np.ndarray:
     """Image at time ``t`` in [0, 1] by backward characteristic tracing.
 
@@ -33,7 +33,8 @@ def propagate_semi_lagrangian(
     Because the flow is defined at the *departure* point ``p``, we solve for
     ``p`` by a few fixed-point iterations rather than evaluating the flow at
     ``q``; this is the difference between a first-order and an exact inverse
-    for smooth fields.
+    for smooth fields. ``order`` is the interpolation order of the final
+    resampling (3 for images; 1 for soft label channels, which must stay in [0, 1]).
     """
     ys, xs = np.mgrid[0 : i0.shape[0], 0 : i0.shape[1]].astype(float)
     px, py = xs.copy(), ys.copy()
@@ -42,7 +43,7 @@ def propagate_semi_lagrangian(
         vp = warp(v, px, py, order=1)
         px = xs - t * up
         py = ys - t * vp
-    return warp(i0, px, py, order=3)
+    return warp(i0, px, py, order=order)
 
 
 def propagate_upwind(i0: np.ndarray, u: np.ndarray, v: np.ndarray, t: float, cfl: float = 0.5) -> np.ndarray:

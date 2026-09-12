@@ -40,7 +40,7 @@ from matplotlib.patches import Circle
 
 from ofi import horn_schunck_pyramid, propagate_semi_lagrangian, psnr
 from ofi.augment import ROTATION, area_preserving_perturbation, propagate_ode
-from ofi.video import WindowTracker, crop_letterbox, flow_to_rgb, read_frames, resize_frames
+from ofi.video import WindowTracker, cached_flows, crop_letterbox, flow_to_rgb, read_frames, resize_frames
 
 
 def _clean(ax, title=None):
@@ -90,9 +90,10 @@ def main():
     tracker = WindowTracker((H, W), window)
     syn_loc = frames[0].copy()
     syn_per = frames[0].copy()
+    all_flows = cached_flows(frames, [(k, k + 1) for k in range(n - 1)], out / "flows_cache.npz", args.levels, args.alpha)
     for k in range(n - 1):
         a, b = frames[k], frames[k + 1]
-        u, v = horn_schunck_pyramid(a, b, alpha=args.alpha, levels=args.levels)
+        u, v = all_flows[(k, k + 1)]
         flows.append((u, v))
         psnrs.append((psnr(a, b), psnr(propagate_semi_lagrangian(a, u, v, 1.0), b)))
 
