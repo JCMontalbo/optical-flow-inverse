@@ -36,38 +36,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.animation import FuncAnimation, PillowWriter
-from matplotlib.colors import hsv_to_rgb
 from matplotlib.patches import Circle
-from scipy.ndimage import gaussian_filter, zoom
 
 from ofi import horn_schunck_pyramid, propagate_semi_lagrangian, psnr
-from ofi.augment import ROTATION, area_preserving_perturbation, gaussian_window, propagate_ode
-
-
-def read_frames(path: Path, start: int, end: int) -> np.ndarray:
-    import imageio.v2 as iio
-
-    reader = iio.get_reader(str(path), "ffmpeg")
-    frames = []
-    for k, f in enumerate(reader):
-        if k >= end:
-            break
-        if k >= start:
-            frames.append(np.asarray(f)[..., :3].astype(float) @ np.array([0.299, 0.587, 0.114]) / 255.0)
-    reader.close()
-    return np.stack(frames)
-
-
-def crop_letterbox(frames: np.ndarray, thresh: float = 0.02) -> np.ndarray:
-    rows = np.where(frames.mean(axis=(0, 2)) > thresh)[0]
-    cols = np.where(frames.mean(axis=(0, 1)) > thresh)[0]
-    return frames[:, rows.min() : rows.max() + 1, cols.min() : cols.max() + 1]
-
-
-def flow_to_rgb(u, v, vmax):
-    mag = np.hypot(u, v)
-    hue = (np.arctan2(-v, -u) + np.pi) / (2 * np.pi)
-    return hsv_to_rgb(np.stack([hue, np.clip(mag / vmax, 0, 1), np.ones_like(mag)], -1))
+from ofi.augment import ROTATION, area_preserving_perturbation, propagate_ode
+from ofi.video import WindowTracker, crop_letterbox, flow_to_rgb, read_frames, resize_frames
 
 
 def _clean(ax, title=None):
@@ -105,10 +78,7 @@ def main():
 
     out = args.out
     out.mkdir(parents=True, exist_ok=True)
-    frames = crop_letterbox(read_frames(args.video, args.start, args.end))
-    scale = args.width / frames.shape[2]
-    frames = np.stack([zoom(f, scale, order=1) for f in frames])
-    frames = np.clip(frames, 0, 1)
+    frames = resize_frames(crop_letterbox(read_frames(args.video, args.start, args.end)), args.width)
     n, H, W = frames.shape
     window = args.window or 0.12 * H
     amp = args.amplitude or 0.04 * H
@@ -117,7 +87,7 @@ def main():
     # --- stream through the pairs
     t0 = time.time()
     flows, centers, psnrs, loc_frames, per_frames = [], [], [], [], []
-    center = None
+    tracker = WindowTracker((H, W), window)
     syn_loc = frames[0].copy()
     syn_per = frames[0].copy()
     for k in range(n - 1):
@@ -127,14 +97,8 @@ def main():
         psnrs.append((psnr(a, b), psnr(propagate_semi_lagrangian(a, u, v, 1.0), b)))
 
         mag = np.hypot(u, v)
-        # Motion relative to the dominant (camera) motion: where the *subject* moves.
-        rel = np.hypot(u - np.median(u), v - np.median(v))
-        if center is None:  # start the window where the first pair moves most, relative to the camera
-            sm = gaussian_filter(rel, window)
-            cy, cx = np.unravel_index(np.argmax(sm), sm.shape)
-            center = np.array([cx, cy], dtype=float)
-        f = gaussian_window((H, W), tuple(center), window)
-        centers.append(center.copy())
+        f, center = tracker.window(u, v)
+        centers.append(center)
 
         src_loc = syn_loc if args.accumulate else a
         src_per = syn_per if args.accumulate else a
@@ -146,17 +110,6 @@ def main():
         loc_frames.append(syn_loc)
         per_frames.append(syn_per)
 
-        # Track: advect the window with the mean flow under it, then pull it toward
-        # the centroid of motion magnitude under it (mean-shift), so it stays on
-        # moving pixels instead of drifting onto static background.
-        wsum = f.sum()
-        center = center + np.array([(u * f).sum() / wsum, (v * f).sum() / wsum])
-        w = f * rel
-        if w.sum() > 1e-9:
-            ys, xs = np.mgrid[0:H, 0:W]
-            centroid = np.array([(w * xs).sum() / w.sum(), (w * ys).sum() / w.sum()])
-            center = 0.5 * center + 0.5 * centroid
-        center = np.clip(center, [0, 0], [W - 1, H - 1])
         if k % 10 == 0:
             print(f"  pair {k:3d}: |flow| mean {mag.mean():.2f} max {mag.max():.1f} px; PSNR next frame {psnrs[-1][0]:.1f} -> {psnrs[-1][1]:.1f} dB  ({time.time() - t0:.0f}s)")
 

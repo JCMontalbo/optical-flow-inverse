@@ -154,6 +154,51 @@ Any MP4 works; `--gain`, `--amplitude`, `--window` set the strength and size of 
 `--accumulate` chains synthetic frames instead of deriving each from the real one (the dissertation's
 evolution setting, which drifts as its Fig. 4.21–4.22 show). About 3 s per pair at 320 px wide.
 
+### Creating new video data
+
+`scripts/synthesize_video.py` goes further than modifying frames as they pass — it creates data that was
+not in the clip, in the two senses the dissertation set out.
+
+**New frames, validated against reality.** Hold out every odd frame, generate it by propagating the even
+frame before it along the flow to the even frame after it for half the time, and compare with the real
+held-out frame. Linear blending — what naive interpolation does — is the baseline.
+
+![held-out validation](figures/video/heldout.png)
+
+| how the held-out frame is made | mean PSNR vs. the real frame (28 frames) |
+|---|---|
+| nearest real frame | 26.3 dB |
+| linear blend of the two neighbours | 30.0 dB |
+| **propagation along the flow** | **32.9 dB** |
+
+The blend doubles anything that moves (the hanging figure, zoomed); propagation places it once. Where the
+motion is slow (frames 21–33) the blend is as good or better, since any flow error costs more than a
+faint ghost. The same machinery gives 4× slow motion — three new frames between every real pair:
+
+<p align="center">
+<img src="figures/video/slowmo.gif" width="720" alt="4x slow motion: real frames held, linear blend, propagated">
+</p>
+
+**New videos of the same scene.** A family of synthetic clips in which the motion is modified
+*persistently*: the tracked region moves 3× faster, or is frozen while everything else moves, or pulses
+under a swirl, squeeze or shear. The deviation from the real motion is accumulated frame to frame (advected
+along the flow with a memory of 0.9 and capped at 10% of the frame height), and each synthetic frame is a
+single resampling of the real frame at that instant — so the clips diverge from the original without
+accumulating blur.
+
+<p align="center">
+<img src="figures/video/family.gif" width="720" alt="original clip and five synthetic variants">
+</p>
+
+![family stats](figures/video/family_stats.png)
+
+By the end of the clip the variants sit 24–29 dB from the original (the "region moves 3×" clip is the
+furthest) while their sharpness stays within a few percent of the real footage.
+
+```bash
+python scripts/synthesize_video.py sintel.mp4 --start 0 --end 58 --out out/     --url https://test-videos.co.uk/vids/sintel/mp4/h264/360/Sintel_360_10s_1MB.mp4
+```
+
 *Clip: [Sintel](https://durian.blender.org) © Blender Foundation, CC BY 3.0.*
 
 ## Results — the inverse problem itself
@@ -211,7 +256,7 @@ experiments. `--width`, `--gain`, `--amplitude` control the window size, how muc
 moves, and the perturbation strength.
 
 ```bash
-pytest                               # 28 tests, ~4 s
+pytest                               # 30 tests, ~4 s
 python scripts/run_augmentation.py   # figures for ch. 3–4
 python scripts/run_experiments.py    # figures for the inverse problem
 ```
@@ -246,7 +291,9 @@ scripts/
   run_experiments.py    figures and numbers for the inverse problem
   augment_pair.py       the pipeline on two frames of your own
   augment_video.py      the pipeline streaming over a video
-tests/                  28 tests on synthetic ground truth, one per claim above
+  synthesize_video.py   new frames (validated on held-out frames, slow motion) and new clips
+ofi/video.py            video I/O and the camera-relative window tracker
+tests/                  30 tests on synthetic ground truth, one per claim above
 ```
 
 ## Background
