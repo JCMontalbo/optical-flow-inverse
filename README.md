@@ -309,7 +309,7 @@ where the anatomy has changed beyond what a chain of slice-to-slice flows can fo
 | 1 | 0.581 ± 0.035 | 0.568 ± 0.028 | 0.634 ± 0.035 | **0.680 ± 0.025** | 0.610 ± 0.022 |
 | 2 | 0.814 ± 0.005 | 0.826 ± 0.008 | 0.833 ± 0.004 | **0.842 ± 0.003** | 0.827 ± 0.005 |
 | 4 | 0.866 ± 0.001 | **0.885 ± 0.004** | 0.880 ± 0.006 | 0.868 ± 0.010 | 0.854 ± 0.002 |
-| all (~65) | 0.886 ± 0.003 | **0.901 ± 0.004** | 0.887 | 0.884 | 0.882 |
+| all (~65) | 0.886 ± 0.003 | **0.901 ± 0.004** | 0.892 ± 0.010 | 0.886 ± 0.008 | 0.879 ± 0.009 |
 
 **Verdict against the pre-registered criteria.** At one labelled slice per patient the recovered-flow family
 is the best of the five arms: **+11.1 Dice points over plausible affine** (H1, supported, seed ranges
