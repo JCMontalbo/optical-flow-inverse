@@ -1,0 +1,5 @@
+4 cells to run (56 done)
+[1/4] budget=999 arm=elastic    seed=2  Dice=0.9011  es=0.970  step=2700  flows_ok=0  1.5 min  (elapsed 2 min)
+[2/4] budget=999 arm=flow       seed=2  Dice=0.8900  es=0.965  step=2850  flows_ok=3524  1.8 min  (elapsed 3 min)
+[3/4] budget=999 arm=propagate  seed=1  Dice=0.8669  es=0.973  step=2700  flows_ok=3524  1.3 min  (elapsed 5 min)
+[4/4] budget=999 arm=propagate  seed=2  Dice=0.8873  es=0.974  step=2700  flows_ok=3524  1.3 min  (elapsed 7 min)

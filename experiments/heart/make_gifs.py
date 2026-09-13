@@ -55,11 +55,8 @@ def propagation_gif(vid):
     img, m, _ = load_volume(vid)
     have = [k for k in range(len(m)) if m[k].any()]
     k0 = have[len(have) // 2]
-    order = [k0] + [k for d in range(1, len(img)) for k in (k0 + d, k0 - d) if 0 <= k < len(img)]
     # carry the label outward, chaining one slice at a time
     carried = {k0: m[k0]}
-    for k in sorted(k for k in range(len(img)) if k != k0):
-        pass
     for direction in (1, -1):
         prev = k0
         k = k0 + direction
@@ -67,14 +64,18 @@ def propagation_gif(vid):
             u, v = smooth_flow(img[prev], img[k])
             carried[k] = chain_label(carried[prev], [(u, v)])
             prev, k = k, k + direction
-    frames = sorted(carried)  # sweep bottom to top
+    # play it the way it was computed: hold on the labelled slice, sweep up, come back, sweep down
+    # ... and stop four slices past where the atrium ends: after that there is nothing left to compare against
+    top, bot = min(len(img) - 1, have[-1] + 4), max(0, have[0] - 4)
+    up, down = list(range(k0, top + 1)), list(range(k0, bot - 1, -1))
+    frames = [k0] * 4 + up + [up[-1]] * 3 + [k0] * 3 + down + [down[-1]] * 3
 
     fig, ax = plt.subplots(1, 2, figsize=(9.2, 4.9))
     im0 = ax[0].imshow(img[frames[0]], cmap="gray", vmin=0, vmax=1)
     im1 = ax[1].imshow(img[frames[0]], cmap="gray", vmin=0, vmax=1)
     _clean(ax[0])
     _clean(ax[1])
-    fig.text(0.5, 0.965, f"Validation patient {vid}: label drawn on ONE slice (#{k0}), carried through the volume along the recovered flow", ha="center", fontsize=10)
+    fig.text(0.5, 0.965, f"Validation patient {vid}: label drawn on ONE mid-volume slice (#{k0}), carried outward both ways along the recovered flow (to 4 slices past the atrium)", ha="center", fontsize=10)
     conts = []
     fig.tight_layout(rect=(0, 0, 1, 0.94))
 
@@ -92,7 +93,8 @@ def propagation_gif(vid):
             conts.append(ax[1].contour(m[k], levels=[0.5], colors="r", linewidths=0.7, linestyles="--"))
         sc = iou(carried[k], m[k]) if (m[k].any() or carried[k].any()) else 1.0
         ax[0].set_title(f"slice {k}: true label", fontsize=10)
-        ax[1].set_title(f"carried {abs(k - k0)} slices from #{k0}: IoU {sc:.2f}" if k != k0 else "the one labelled slice", fontsize=10)
+        arrow = "up" if k > k0 else "down"
+        ax[1].set_title(f"carried {abs(k - k0)} slices {arrow} from #{k0}: IoU {sc:.2f}" if k != k0 else f"the one labelled slice (#{k0}, mid-volume)", fontsize=10)
         return [im0, im1]
 
     anim = FuncAnimation(fig, update, frames=len(frames), interval=1000 / 8, blit=False)
@@ -152,5 +154,6 @@ if __name__ == "__main__":
     vid = val[0]
     k0, ious, dists = propagation_gif(vid)
     print(f"{vid}: label carried from slice {k0}; IoU vs true label: mean {np.mean(ious):.3f}, at 5 slices {np.mean([i for i, d in zip(ious, dists) if d == 5]):.3f}, at 10 {np.mean([i for i, d in zip(ious, dists) if d == 10]):.3f}, at 20 {np.mean([i for i, d in zip(ious, dists) if d == 20]):.3f}")
-    augmentation_gif(vid, k0)
-    print("wrote figures/heart_propagation.gif, figures/heart_augmentation.gif")
+    if "--propagation-only" not in sys.argv:
+        augmentation_gif(vid, k0)
+    print("wrote figures/heart_propagation.gif" + ("" if "--propagation-only" in sys.argv else ", figures/heart_augmentation.gif"))

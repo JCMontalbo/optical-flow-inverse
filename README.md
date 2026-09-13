@@ -304,9 +304,11 @@ label rides along in every case.*
 <img src="figures/heart_propagation.gif" width="100%" alt="a label drawn on one slice carried through a validation patient's volume along the recovered flow">
 </p>
 
-*Labels ride along in MRI too: one slice of a held-out patient is labelled (#40), and the label is carried
-slice by slice through the volume along the recovered flow (cyan) against the true label of each slice
-(red). It holds for about ten slices — IoU 0.91 at 5 slices away, 0.83 at 10 — and breaks down by 20,
+*Labels ride along in MRI too: one slice in the middle of a held-out patient's volume is labelled (#40),
+and the label is carried slice by slice outward in both directions along the recovered flow (cyan) against
+the true label of each slice (red). Starting mid-volume matters: an organ grows and then shrinks as you
+move through the slices, so a label seeded at one end would have to survive twice the distance. It holds
+for about ten slices in each direction — IoU 0.91 at 5 slices away, 0.83 at 10 — and breaks down by 20,
 where the anatomy has changed beyond what a chain of slice-to-slice flows can follow.*
 
 <p align="center">

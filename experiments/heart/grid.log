@@ -1,0 +1,121 @@
+=== flow stats ===
+{
+  "flows": 3804,
+  "ok": 3804,
+  "mean_gain_dB": 3.9076114412418783
+}=== grid start Sat, Sep 12, 2026  6:25:47 PM ===
+[shard 1] 20 cells to run (0 done)
+[shard 2] 20 cells to run (0 done)
+[shard 0] 20 cells to run (0 done)
+[shard 0] [1/20] budget=  1 arm=none       seed=0  Dice=0.6302  es=0.686  step= 900  flows_ok=0  1.2 min  (elapsed 1 min)
+[shard 1] [1/20] budget=  1 arm=plausible  seed=0  Dice=0.5921  es=0.661  step=1800  flows_ok=0  1.7 min  (elapsed 2 min)
+[shard 2] [1/20] budget=  1 arm=elastic    seed=0  Dice=0.6431  es=0.706  step=1200  flows_ok=0  1.7 min  (elapsed 2 min)
+[shard 2] [2/20] budget=  2 arm=none       seed=0  Dice=0.8069  es=0.879  step=2250  flows_ok=0  1.1 min  (elapsed 3 min)
+[shard 1] [2/20] budget=  1 arm=propagate  seed=0  Dice=0.6371  es=0.721  step=1350  flows_ok=56  1.4 min  (elapsed 3 min)
+[shard 0] [2/20] budget=  1 arm=flow       seed=0  Dice=0.6538  es=0.713  step=1650  flows_ok=56  2.0 min  (elapsed 3 min)
+[shard 2] [3/20] budget=  2 arm=flow       seed=0  Dice=0.8374  es=0.897  step= 900  flows_ok=112  1.8 min  (elapsed 5 min)
+[shard 1] [3/20] budget=  2 arm=elastic    seed=0  Dice=0.8375  es=0.879  step=1800  flows_ok=0  1.6 min  (elapsed 5 min)
+[shard 0] [3/20] budget=  2 arm=plausible  seed=0  Dice=0.8351  es=0.889  step= 600  flows_ok=0  1.4 min  (elapsed 5 min)
+[shard 1] [4/20] budget=  4 arm=none       seed=0  Dice=0.8673  es=0.922  step=1200  flows_ok=0  1.2 min  (elapsed 6 min)
+[shard 0] [4/20] budget=  2 arm=propagate  seed=0  Dice=0.8331  es=0.887  step= 450  flows_ok=112  1.6 min  (elapsed 6 min)
+[shard 2] [4/20] budget=  4 arm=plausible  seed=0  Dice=0.8883  es=0.933  step= 900  flows_ok=0  1.6 min  (elapsed 6 min)
+[shard 2] [5/20] budget=  4 arm=propagate  seed=0  Dice=0.8566  es=0.928  step=1200  flows_ok=224  1.3 min  (elapsed 8 min)
+[shard 2] Traceback (most recent call last):
+[shard 2]   File "C:\Users\Socce\OneDrive\Desktop\John\GitHub\optical-flow-inverse\experiments\heart\run_grid.py", line 49, in <module>
+[shard 2]     main()
+[shard 2]     ~~~~^^
+[shard 2]   File "C:\Users\Socce\OneDrive\Desktop\John\GitHub\optical-flow-inverse\experiments\heart\run_grid.py", line 43, in main
+[shard 2]     row = run(b, a, s, steps=args.steps)
+[shard 2]   File "C:\Users\Socce\OneDrive\Desktop\John\GitHub\optical-flow-inverse\experiments\heart\train.py", line 120, in run
+[shard 2]     S = build_sets(budget, arm)
+[shard 2]   File "C:\Users\Socce\OneDrive\Desktop\John\GitHub\optical-flow-inverse\experiments\heart\train.py", line 75, in build_sets
+[shard 2]     es_x=np.stack(es_x), es_y=np.stack(es_y),
+[shard 2]          ~~~~~~~~^^^^^^
+[shard 2]   File "C:\Users\Socce\AppData\Local\Programs\Python\Python313\Lib\site-packages\numpy\_core\shape_base.py", line 456, in stack
+[shard 2]     raise ValueError('need at least one array to stack')
+[shard 2] ValueError: need at least one array to stack
+[shard 1] [5/20] budget=  4 arm=flow       seed=0  Dice=0.8654  es=0.933  step=2100  flows_ok=224  1.8 min  (elapsed 8 min)
+[shard 1] Traceback (most recent call last):
+[shard 1]   File "C:\Users\Socce\OneDrive\Desktop\John\GitHub\optical-flow-inverse\experiments\heart\run_grid.py", line 49, in <module>
+[shard 1]     main()
+[shard 1]     ~~~~^^
+[shard 1]   File "C:\Users\Socce\OneDrive\Desktop\John\GitHub\optical-flow-inverse\experiments\heart\run_grid.py", line 43, in main
+[shard 1]     row = run(b, a, s, steps=args.steps)
+[shard 1]   File "C:\Users\Socce\OneDrive\Desktop\John\GitHub\optical-flow-inverse\experiments\heart\train.py", line 120, in run
+[shard 1]     S = build_sets(budget, arm)
+[shard 1]   File "C:\Users\Socce\OneDrive\Desktop\John\GitHub\optical-flow-inverse\experiments\heart\train.py", line 75, in build_sets
+[shard 1]     es_x=np.stack(es_x), es_y=np.stack(es_y),
+[shard 1]          ~~~~~~~~^^^^^^
+[shard 1]   File "C:\Users\Socce\AppData\Local\Programs\Python\Python313\Lib\site-packages\numpy\_core\shape_base.py", line 456, in stack
+[shard 1]     raise ValueError('need at least one array to stack')
+[shard 1] ValueError: need at least one array to stack
+[shard 0] [5/20] budget=  4 arm=elastic    seed=0  Dice=0.8732  es=0.926  step=2100  flows_ok=0  1.5 min  (elapsed 8 min)
+[shard 0] Traceback (most recent call last):
+[shard 0]   File "C:\Users\Socce\OneDrive\Desktop\John\GitHub\optical-flow-inverse\experiments\heart\run_grid.py", line 49, in <module>
+[shard 0]     main()
+[shard 0]     ~~~~^^
+[shard 0]   File "C:\Users\Socce\OneDrive\Desktop\John\GitHub\optical-flow-inverse\experiments\heart\run_grid.py", line 43, in main
+[shard 0]     row = run(b, a, s, steps=args.steps)
+[shard 0]   File "C:\Users\Socce\OneDrive\Desktop\John\GitHub\optical-flow-inverse\experiments\heart\train.py", line 120, in run
+[shard 0]     S = build_sets(budget, arm)
+[shard 0]   File "C:\Users\Socce\OneDrive\Desktop\John\GitHub\optical-flow-inverse\experiments\heart\train.py", line 75, in build_sets
+[shard 0]     es_x=np.stack(es_x), es_y=np.stack(es_y),
+[shard 0]          ~~~~~~~~^^^^^^
+[shard 0]   File "C:\Users\Socce\AppData\Local\Programs\Python\Python313\Lib\site-packages\numpy\_core\shape_base.py", line 456, in stack
+[shard 0]     raise ValueError('need at least one array to stack')
+[shard 0] ValueError: need at least one array to stack
+=== grid done Sat, Sep 12, 2026  6:33:36 PM ===
+=== flow stats ===
+{
+  "flows": 3804,
+  "ok": 3804,
+  "mean_gain_dB": 3.9076114412418783
+}=== grid start Sat, Sep 12, 2026  6:33:57 PM ===
+[shard 2] 15 cells to run (15 done)
+[shard 1] 15 cells to run (15 done)
+[shard 0] 15 cells to run (15 done)
+[shard 0] [1/15] budget=999 arm=none       seed=0  Dice=0.8887  es=0.975  step=3000  flows_ok=0  1.2 min  (elapsed 1 min)
+[shard 1] [1/15] budget=999 arm=plausible  seed=0  Dice=0.8984  es=0.962  step=2850  flows_ok=0  1.6 min  (elapsed 2 min)
+[shard 2] [1/15] budget=999 arm=elastic    seed=0  Dice=0.8970  es=0.971  step=2700  flows_ok=0  1.6 min  (elapsed 2 min)
+[shard 2] [2/15] budget=  1 arm=none       seed=1  Dice=0.5600  es=0.637  step=2250  flows_ok=0  0.9 min  (elapsed 3 min)
+[shard 0] [2/15] budget=999 arm=flow       seed=0  Dice=0.8927  es=0.966  step=3000  flows_ok=3524  1.8 min  (elapsed 3 min)
+[shard 1] [2/15] budget=999 arm=propagate  seed=0  Dice=0.8825  es=0.974  step=3000  flows_ok=3524  1.5 min  (elapsed 4 min)
+[shard 2] [3/15] budget=  1 arm=plausible  seed=2  Dice=0.5839  es=0.650  step=1200  flows_ok=0  1.6 min  (elapsed 4 min)
+[shard 0] [3/15] budget=  1 arm=none       seed=2  Dice=0.5539  es=0.637  step=1050  flows_ok=0  1.1 min  (elapsed 4 min)
+[shard 1] [3/15] budget=  1 arm=plausible  seed=1  Dice=0.5293  es=0.640  step= 900  flows_ok=0  1.5 min  (elapsed 5 min)
+[shard 0] [4/15] budget=  1 arm=elastic    seed=1  Dice=0.6709  es=0.756  step=1500  flows_ok=0  1.5 min  (elapsed 6 min)
+[shard 2] [4/15] budget=  1 arm=flow       seed=1  Dice=0.6724  es=0.727  step= 600  flows_ok=56  1.8 min  (elapsed 6 min)
+[shard 1] [4/15] budget=  1 arm=elastic    seed=2  Dice=0.5876  es=0.661  step=1800  flows_ok=0  1.5 min  (elapsed 7 min)
+[shard 2] [5/15] budget=  1 arm=propagate  seed=2  Dice=0.6094  es=0.714  step= 300  flows_ok=56  1.4 min  (elapsed 7 min)
+[shard 0] [5/15] budget=  1 arm=flow       seed=2  Dice=0.7126  es=0.778  step= 750  flows_ok=56  1.8 min  (elapsed 8 min)
+[shard 1] [5/15] budget=  1 arm=propagate  seed=1  Dice=0.5826  es=0.685  step= 450  flows_ok=56  1.5 min  (elapsed 8 min)
+[shard 0] [6/15] budget=  2 arm=none       seed=1  Dice=0.8168  es=0.883  step= 300  flows_ok=0  1.2 min  (elapsed 9 min)
+[shard 2] [6/15] budget=  2 arm=plausible  seed=1  Dice=0.8270  es=0.895  step= 300  flows_ok=0  1.7 min  (elapsed 9 min)
+[shard 1] [6/15] budget=  2 arm=none       seed=2  Dice=0.8194  es=0.880  step=1050  flows_ok=0  1.2 min  (elapsed 9 min)
+[shard 0] [7/15] budget=  2 arm=plausible  seed=2  Dice=0.8156  es=0.889  step=1650  flows_ok=0  1.5 min  (elapsed 10 min)
+[shard 2] [7/15] budget=  2 arm=elastic    seed=2  Dice=0.8292  es=0.891  step= 600  flows_ok=0  1.6 min  (elapsed 11 min)
+[shard 1] [7/15] budget=  2 arm=elastic    seed=1  Dice=0.8308  es=0.891  step=1350  flows_ok=0  1.5 min  (elapsed 11 min)
+[shard 2] [8/15] budget=  2 arm=propagate  seed=1  Dice=0.8214  es=0.884  step= 600  flows_ok=112  1.2 min  (elapsed 12 min)
+[shard 0] [8/15] budget=  2 arm=flow       seed=1  Dice=0.8438  es=0.895  step=2250  flows_ok=112  1.8 min  (elapsed 12 min)
+[shard 1] [8/15] budget=  2 arm=flow       seed=2  Dice=0.8453  es=0.893  step=1500  flows_ok=112  2.0 min  (elapsed 13 min)
+[shard 2] [9/15] budget=  4 arm=none       seed=2  Dice=0.8650  es=0.923  step=1350  flows_ok=0  1.1 min  (elapsed 13 min)
+[shard 0] [9/15] budget=  2 arm=propagate  seed=2  Dice=0.8271  es=0.890  step= 300  flows_ok=112  1.5 min  (elapsed 14 min)
+[shard 1] [9/15] budget=  4 arm=none       seed=1  Dice=0.8661  es=0.920  step=1050  flows_ok=0  1.1 min  (elapsed 14 min)
+[shard 2] [10/15] budget=  4 arm=elastic    seed=1  Dice=0.8868  es=0.926  step=1050  flows_ok=0  1.6 min  (elapsed 15 min)
+[shard 0] [10/15] budget=  4 arm=plausible  seed=1  Dice=0.8791  es=0.928  step=1950  flows_ok=0  1.5 min  (elapsed 15 min)
+[shard 1] [10/15] budget=  4 arm=plausible  seed=2  Dice=0.8879  es=0.931  step=1350  flows_ok=0  1.5 min  (elapsed 16 min)
+[shard 2] [11/15] budget=  4 arm=flow       seed=2  Dice=0.8807  es=0.928  step=1200  flows_ok=224  35.8 min  (elapsed 51 min)
+[shard 0] [11/15] budget=  4 arm=elastic    seed=2  Dice=0.8813  es=0.929  step=1800  flows_ok=0  49.5 min  (elapsed 65 min)
+[shard 2] [12/15] budget=999 arm=none       seed=1  Dice=0.8878  es=0.975  step=2550  flows_ok=0  15.0 min  (elapsed 66 min)
+[shard 1] [11/15] budget=  4 arm=flow       seed=1  Dice=0.8572  es=0.931  step=1800  flows_ok=224  50.5 min  (elapsed 66 min)
+[shard 0] [12/15] budget=  4 arm=propagate  seed=1  Dice=0.8512  es=0.933  step= 900  flows_ok=224  2.2 min  (elapsed 67 min)
+[shard 2] [13/15] budget=999 arm=plausible  seed=2  Dice=0.9065  es=0.961  step=2400  flows_ok=0  2.4 min  (elapsed 68 min)
+[shard 1] [12/15] budget=  4 arm=propagate  seed=2  Dice=0.8530  es=0.931  step=1050  flows_ok=224  2.3 min  (elapsed 68 min)
+[shard 0] [13/15] budget=999 arm=none       seed=2  Dice=0.8815  es=0.975  step=2850  flows_ok=0  1.7 min  (elapsed 69 min)
+[shard 1] [13/15] budget=999 arm=plausible  seed=1  Dice=0.8988  es=0.962  step=3000  flows_ok=0  2.2 min  (elapsed 71 min)
+[shard 0] [14/15] budget=999 arm=elastic    seed=1  Dice=0.8779  es=0.970  step=3000  flows_ok=0  2.4 min  (elapsed 71 min)
+[shard 2] [14/15] budget=999 arm=flow       seed=1  Dice=0.8748  es=0.965  step=2850  flows_ok=3524  3.2 min  (elapsed 71 min)
+      0 [main] bash 2490 dofork: child -1 - forked process 32684 died unexpectedly, retry 0, exit code 0xC000026B, errno 11
+experiments/heart/run_all.sh: fork: retry: Resource temporarily unavailable
+1017977 [main] bash 2490 dofork: child -1 - forked process 7632 died unexpectedly, retry 0, exit code 0xC000026B, errno 11
+experiments/heart/run_all.sh: fork: retry: Resource temporarily unavailable
