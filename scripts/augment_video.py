@@ -148,7 +148,7 @@ def main():
         return ims + circles
 
     anim = FuncAnimation(fig, update, frames=len(idx), interval=1000 / 12, blit=True)
-    anim.save(out / "stream.gif", writer=PillowWriter(fps=12 // args.gif_stride), dpi=64)
+    anim.save(out / "stream.gif", writer=PillowWriter(fps=12 // args.gif_stride), dpi=100)
     plt.close(fig)
 
     # --- summary figure: one pair in detail + PSNR trace

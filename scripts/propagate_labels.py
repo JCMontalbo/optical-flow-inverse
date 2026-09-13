@@ -205,7 +205,7 @@ def main():
         return ims
 
     anim = FuncAnimation(fig, update, frames=len(idx), interval=1000 / 12, blit=False)
-    anim.save(out / "labels.gif", writer=PillowWriter(fps=12 // args.gif_stride), dpi=64)
+    anim.save(out / "labels.gif", writer=PillowWriter(fps=12 // args.gif_stride), dpi=100)
     plt.close(fig)
     print(f"\nwrote {out}/labels.gif labels.png labels_iou.csv")
 

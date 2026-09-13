@@ -86,7 +86,7 @@ def fig_homotopy():
     ts = list(np.linspace(0, 1, 16))
     frames = [propagate_semi_lagrangian(I0, *scale_flow(U, V, e), 1.0) for e in ts]
     frames = frames + frames[-2:0:-1]
-    fig, ax = plt.subplots(figsize=(3.2, 3.2))
+    fig, ax = plt.subplots(figsize=(4.8, 4.8))
     im = ax.imshow(frames[0], cmap="gray", vmin=0, vmax=1)
     _clean(ax)
     fig.tight_layout(pad=0)
@@ -96,7 +96,7 @@ def fig_homotopy():
         return (im,)
 
     anim = FuncAnimation(fig, update, frames=len(frames), interval=80, blit=True)
-    anim.save(OUT / "homotopy.gif", writer=PillowWriter(fps=12), dpi=80)
+    anim.save(OUT / "homotopy.gif", writer=PillowWriter(fps=12), dpi=100)
     plt.close(fig)
     return {e: (psnr(lin[j], truth[j]), psnr(tra[j], truth[j])) for j, e in enumerate(eps)}
 
@@ -161,7 +161,7 @@ def fig_area_preserving():
     ts = list(np.linspace(0, 1, 14))
     ts = ts + ts[-2:0:-1]
     fields = [area_preserving_perturbation(SHAPE, A, center, width, amplitude=amp) for _, A in gens]
-    fig, ax = plt.subplots(1, 4, figsize=(11, 3.1))
+    fig, ax = plt.subplots(1, 4, figsize=(14, 3.9))
     ims = []
     for a, (name, _), (u, v) in zip(ax, gens, fields):
         ims.append(a.imshow(I0, cmap="gray", vmin=0, vmax=1))
@@ -175,7 +175,7 @@ def fig_area_preserving():
         return ims
 
     anim = FuncAnimation(fig, update, frames=len(ts), interval=80, blit=True)
-    anim.save(OUT / "deformation.gif", writer=PillowWriter(fps=12), dpi=64)
+    anim.save(OUT / "deformation.gif", writer=PillowWriter(fps=12), dpi=100)
     plt.close(fig)
     return rows
 

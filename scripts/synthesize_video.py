@@ -142,7 +142,7 @@ def slow_motion(frames, flows1, out, factor, seg, credit):
         return ims
 
     anim = FuncAnimation(fig, update, frames=len(real), interval=1000 / 12, blit=True)
-    anim.save(out / "slowmo.gif", writer=PillowWriter(fps=12), dpi=64)
+    anim.save(out / "slowmo.gif", writer=PillowWriter(fps=12), dpi=100)
     plt.close(fig)
 
 
@@ -189,7 +189,7 @@ def synthesize_family(frames, flows1, variants, window, rho, cap, out, gif_strid
         return ims + circ
 
     anim = FuncAnimation(fig, update, frames=len(idx), interval=1000 / 12, blit=True)
-    anim.save(out / "family.gif", writer=PillowWriter(fps=12 // gif_stride), dpi=64)
+    anim.save(out / "family.gif", writer=PillowWriter(fps=12 // gif_stride), dpi=100)
     plt.close(fig)
 
     fig, ax = plt.subplots(1, 2, figsize=(13, 3.8), constrained_layout=True)
