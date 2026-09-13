@@ -311,6 +311,15 @@ where the anatomy has changed beyond what a chain of slice-to-slice flows can fo
 | 4 | 0.866 ± 0.001 | **0.885 ± 0.004** | 0.880 ± 0.006 | 0.868 ± 0.010 | 0.854 ± 0.002 |
 | all (~65) | 0.886 ± 0.003 | **0.901 ± 0.004** | 0.892 ± 0.010 | 0.886 ± 0.008 | 0.879 ± 0.009 |
 
+<p align="center">
+<img src="figures/heart_predictions.gif" width="100%" alt="three segmenters trained on one labelled slice per patient, swept through a held-out patient">
+</p>
+
+*What the numbers look like: three segmenters, each trained on one labelled slice per patient, swept
+through a held-out patient (`experiments/heart/prediction_gif.py`, seed 0, a single retrain — the grid
+means above are the numbers that count). All three struggle at the ends of the volume, where the atrium is
+small and the aorta looks similar; the flow-trained model holds on longest.*
+
 **Verdict against the pre-registered criteria.** At one labelled slice per patient the recovered-flow family
 is the best of the five arms: **+11.1 Dice points over plausible affine** (H1, supported, seed ranges
 disjoint), **+7.0 over carrying labels to neighbouring slices** (H3, supported, disjoint) and **+4.6 over

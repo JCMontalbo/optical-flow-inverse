@@ -117,7 +117,7 @@ def es_dice(model, es_x, es_y, bs=32):
     return num / max(den, 1)
 
 
-def run(budget: int, arm: str, seed: int, steps: int = 3000, batch: int = 16, device="cuda"):
+def run(budget: int, arm: str, seed: int, steps: int = 3000, batch: int = 16, device="cuda", keep_model: bool = False):
     torch.manual_seed(seed)
     np.random.seed(seed)
     gen = torch.Generator().manual_seed(seed)
@@ -176,9 +176,12 @@ def run(budget: int, arm: str, seed: int, steps: int = 3000, batch: int = 16, de
                 best_state = {k: v.detach().clone() for k, v in model.state_dict().items()}
     model.load_state_dict(best_state)
     dice, per = dice3d(model, device)
-    return dict(budget=budget, arm=arm, seed=seed, dice=round(dice, 4), es_dice=round(best, 4), best_step=best_step, n_real=n_real,
-                n_flows_ok=S["n_flows_ok"], n_nb=0 if gx is None else len(gx), minutes=round((time.time() - t0) / 60, 2),
-                per_volume=json.dumps({k: round(v, 4) for k, v in per.items()}))
+    row = dict(budget=budget, arm=arm, seed=seed, dice=round(dice, 4), es_dice=round(best, 4), best_step=best_step, n_real=n_real,
+               n_flows_ok=S["n_flows_ok"], n_nb=0 if gx is None else len(gx), minutes=round((time.time() - t0) / 60, 2),
+               per_volume=json.dumps({k: round(v, 4) for k, v in per.items()}))
+    if keep_model:
+        row["model"] = model
+    return row
 
 
 def append_to(path, row):

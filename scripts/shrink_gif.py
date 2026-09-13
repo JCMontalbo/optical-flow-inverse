@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageSequence
 
-RESERVED = np.array([(255, 0, 0), (0, 191, 191), (255, 127, 14), (31, 119, 180), (214, 39, 40), (0, 255, 255)], float)
+RESERVED = np.array([(255, 0, 0), (0, 191, 191), (255, 127, 14), (31, 119, 180), (214, 39, 40), (0, 255, 255), (44, 160, 44)], float)
 
 
 def snap_colours(frame: Image.Image) -> Image.Image:
@@ -29,7 +29,7 @@ def gray_palette():
     """100 grey levels plus the contour colours used in the figures: for grayscale GIFs with coloured lines,
     where an adaptive palette would drop the lines."""
     levels = [int(round(255 * i / 99)) for i in range(100)]
-    cols = [(g, g, g) for g in levels] + [(255, 0, 0), (0, 191, 191), (255, 127, 14), (31, 119, 180), (214, 39, 40), (0, 255, 255)]
+    cols = [(g, g, g) for g in levels] + [tuple(int(c) for c in rgb) for rgb in RESERVED]
     cols += [(0, 0, 0)] * (256 - len(cols))
     pal = Image.new("P", (1, 1))
     pal.putpalette([c for rgb in cols for c in rgb])
