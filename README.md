@@ -271,6 +271,49 @@ What it does show: on natural video, a fixed set of pairs from a 1981 flow metho
 augmentation, and most of what it gives you is already given by carrying labels to neighbouring real
 frames. A null result the dissertation could not obtain is still a result.
 
+## Experiment 2: cardiac MRI, where a rotated heart is not a plausible patient
+
+The arena the dissertation actually meant. MSD Task02 Heart: 20 cardiac MRI volumes, left atrium labelled;
+adjacent slices are the frame pair (dissertation Fig. 3.2), and the recovered flow is the anatomical change
+through depth. Pre-registered in [docs/downstream_heart_plan.md](docs/downstream_heart_plan.md) before any
+run; code in [`experiments/heart/`](experiments/heart/). Two things done differently from DAVIS: the
+method is **sampled on the fly** — a fresh member of the recovered-flow family every training step (ε,
+window, generator, amplitude all random), exactly as the baselines draw a fresh transform — and the baselines
+are the ones a radiologist would accept: **no flips**, small affine, and **random elastic deformation**
+(Ronneberger et al. 2015), the standard medical augmentation and the sharpest competitor: also smooth
+deformation, just not *observed*. All arms share the same intensity jitter; elastic and flow peaks are both
+capped at 8 px. Metric is 3D Dice of the atrium over the 6 held-out patients, mean ± std over 3 seeds.
+
+![downstream heart](figures/downstream_heart.png)
+
+| labelled slices / patient | none | plausible affine | random elastic | **recovered-flow family** | labels to neighbours |
+|---|---|---|---|---|---|
+| 1 | 0.581 ± 0.035 | 0.568 ± 0.028 | 0.634 ± 0.035 | **0.680 ± 0.025** | 0.610 ± 0.022 |
+| 2 | 0.814 ± 0.005 | 0.826 ± 0.008 | 0.833 ± 0.004 | **0.842 ± 0.003** | 0.827 ± 0.005 |
+| 4 | 0.866 ± 0.001 | **0.885 ± 0.004** | 0.880 ± 0.006 | 0.868 ± 0.010 | 0.854 ± 0.002 |
+| all (~65) | 0.886 ± 0.003 | **0.901 ± 0.004** | 0.887 | 0.884 | 0.882 |
+
+**Verdict against the pre-registered criteria.** At one labelled slice per patient the recovered-flow family
+is the best of the five arms: **+11.1 Dice points over plausible affine** (H1, supported, seed ranges
+disjoint), **+7.0 over carrying labels to neighbouring slices** (H3, supported, disjoint) and **+4.6 over
+random elastic deformation** (H2: clears the 2-point bar on the mean, but one elastic seed lands above one
+flow seed, so "supported with overlap"). At two slices it is still first (0.842, ±0.003 across seeds) but
+every augmentation is within 1.6 points of every other. At four and all slices the advantage is gone and
+plausible affine leads (H4). Plausible affine — small rotations and shifts — is *worse than no augmentation*
+at one slice per patient.
+
+Read together with DAVIS: **on natural video, where flipping a bear gives a valid bear, augmentation from
+observed motion loses to cheap flips; on anatomy, where the same flips produce impossible patients, it is the
+best option when labels are scarcest, and the advantage fades as labels accumulate.** That is the claim the
+dissertation made, tested in the setting it was made for, holding where it should and not where it should
+not.
+
+Two implementation notes that were decisive, both from the dissertation itself: on MRI the coarse-to-fine
+pyramid that helps on video *hurts* (garbage on the textureless blood pool) — single-scale Horn–Schunck,
+the dissertation's own setting, was used; and the raw field had to be Gaussian-smoothed before use (§4.2),
+which also improved its reconstruction of the neighbouring slice from +3.3 to +4.4 dB. All 3,804 slice
+flows cleared the acceptance gate (mean +3.9 dB over doing nothing).
+
 ## Results — the inverse problem itself
 
 `python scripts/run_experiments.py` (≈35 s), 128×128 smooth random texture. Endpoint error (EPE) is the mean

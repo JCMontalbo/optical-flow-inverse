@@ -49,7 +49,11 @@ def build_sets(budget: int, arm: str):
         img, m, _ = load_volume(v)
         sel = labelled_indices(m, budget)
         have = [k for k in range(1, len(m) - 1) if m[k].any() and k not in sel]
-        es = np.random.default_rng(7 + sum(map(ord, v))).choice(have, size=min(5, len(have)), replace=False)
+        if not have:  # budget "all": reserve 5 labelled slices per volume for early stopping
+            es = np.random.default_rng(7 + sum(map(ord, v))).choice(sel, size=5, replace=False)
+            sel = [k for k in sel if k not in set(es.tolist())]
+        else:
+            es = np.random.default_rng(7 + sum(map(ord, v))).choice(have, size=min(5, len(have)), replace=False)
         es_x += [img[k] for k in es]
         es_y += [m[k] for k in es]
         need_flows = arm in ("flow", "propagate")

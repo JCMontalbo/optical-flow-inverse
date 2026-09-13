@@ -54,7 +54,7 @@ def main():
     ax.set_xticklabels([xl[b] for b in budgets])
     ax.set_xlabel("labelled slices per training volume (14 volumes)")
     ax.set_ylabel("left-atrium Dice, 6 val volumes (3D)")
-    ax.set_title("Cardiac MRI: does augmentation from observed anatomical motion beat random deformation?")
+    ax.set_title("Cardiac MRI, left atrium: augmentation from observed motion vs. the alternatives")
     ax.grid(alpha=0.3)
     ax.legend(fontsize=8)
     fig.tight_layout()
